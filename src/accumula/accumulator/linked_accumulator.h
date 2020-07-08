@@ -1,33 +1,41 @@
 #pragma once
+
 #include <accumula/concepts/basic.h>
-namespace aa
+
+namespace accumula
 {
+
 
 template <class... Args>
 struct LinkedAccumulator;
 
 template <class C, class... Args>
-//#if HAS_CONCEPTS()
-//requires Accumulator<C>
-//#endif
 struct LinkedAccumulator<C, Args...>
     : C, LinkedAccumulator<Args...>
 {
-    using base = LinkedAccumulator<Args...>;
+    using nexts = LinkedAccumulator<Args...>;
     using Current = C;
+
+public:
+    template <class Args>
+    LinkedAccumulator(const Args &args)
+        : Current(args)
+        , nexts(args)
+    {
+    }
 
 public:
     template <class T>
     inline void add(const T &value)
     {
         Current::add(value);
-        base::add(value);
+        nexts::add(value);
     }
     template <class T>
     inline void remove(const T &value)
     {
         Current::remove(value);
-        base::remove(value);
+        nexts::remove(value);
     }
 };
 
@@ -38,6 +46,8 @@ template <class C>
 struct LinkedAccumulator<C>: C
 {
     using Current = C;
+    using Current::Current;
+
 
 public:
     template <class T>
@@ -58,6 +68,12 @@ template <>
 struct LinkedAccumulator<>
 {
 public:
+    template <class Args>
+    LinkedAccumulator(const Args &args)
+    {
+    }
+
+public:
     template <class T>
     inline void add(const T &)
     {
@@ -67,4 +83,5 @@ public:
     {
     }
 };
-}// namespace aa
+
+}// namespace accumula

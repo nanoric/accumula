@@ -13,9 +13,6 @@
 namespace accumula
 {
 
-#define CACHE_LINE_SIZE 4096
-
-using namespace aa;
 namespace mp = boost::mp11;
 
 namespace parameter
@@ -24,16 +21,13 @@ BOOST_PARAMETER_NAME(window_size)
 }// namespace parameter
 
 
-namespace impl
-{
 //! reentrant: false
 template <class ValueType,
           class WindowType,
           class... _Accumulators>
 requires Subtraction<ValueType,
                      WindowType>//
-    struct WindowStorageImpl
-    : LinkedAccumulator<_Accumulators...>
+    struct WindowFilter: LinkedAccumulator<_Accumulators...>
 {
 
 public:
@@ -56,8 +50,9 @@ private:
     // constructors
 public:
     template <class Args>
-    constexpr WindowStorageImpl(const Args &args)
-        : window(args[parameter::_window_size])
+    constexpr WindowFilter(const Args &args)
+        : base(args)
+        , window(args[parameter::_window_size])
     {
     }
 
@@ -124,26 +119,6 @@ public:
     {
         throw std::runtime_error("not implemented");
     }
-};
-}// namespace impl
-
-template <class ValueType,
-          class WindowType,
-          class... _Accumulators>
-requires Subtraction<ValueType,
-                     WindowType>//
-    struct WindowStorage
-    : impl::WindowStorageImpl<ValueType,
-                              WindowType,
-                              _Accumulators...>
-{
-    BOOST_PARAMETER_CONSTRUCTOR(
-        WindowStorage,
-        (impl::WindowStorageImpl<ValueType,
-                                 WindowType,
-                                 _Accumulators...>),
-        parameter::tag,
-        (required(window_size, *)))
 };
 
 

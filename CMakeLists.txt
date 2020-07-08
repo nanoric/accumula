@@ -15,10 +15,12 @@ link_libraries(
     fmt::fmt-header-only
 )
 
-file(GLOB INCLUDES "src/*.cpp" "src/*.h" "src/*.hpp")
+file(GLOB INCLUDES "src/*.h" "src/*.hpp")
+file(GLOB SOURCES "test/*.cpp")
 add_executable(all_test 
-	test/all.cpp
-    ${INCLUDES} )
+    ${SOURCES}
+    ${INCLUDES}
+)
 
 enable_testing()
 add_test(all_test "${CMAKE_BINARY_DIR}/all_test")

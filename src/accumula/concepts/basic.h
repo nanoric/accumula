@@ -3,9 +3,7 @@
 //#include <concepts>  needs gcc 10 which is under dev.
 #include <boost/mp11/mpl.hpp>
 
-namespace aa
-{
-namespace accumulator
+namespace accumula
 {
 namespace mp = boost::mp11;
 
@@ -61,6 +59,4 @@ template <class Func, class... Args>
 constexpr bool is_constexpr_v =
     is_constexpr<Func, Args...>::value;
 
-}// namespace accumulator
-
-}// namespace aa
+}// namespace accumula
