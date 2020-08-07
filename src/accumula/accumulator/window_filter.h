@@ -1,59 +1,79 @@
 #pragma once
 #include <accumula/concepts/basic.h>
+#include <accumula/concepts/subtraction.h>
+#include <accumula/parameters/parameters.h>
 #include <deque>
 #include <memory_resource>
 
 #include <boost/mp11/mpl.hpp>
-#include <boost/parameter/name.hpp>
-#include <boost/parameter/preprocessor.hpp>
 
-#include "accumula/concepts/subtraction.h"
 #include "linked_accumulator.h"
 
 namespace accumula
 {
-
 namespace mp = boost::mp11;
 
-namespace parameter
+struct GetValue
 {
-BOOST_PARAMETER_NAME(window_size)
-}// namespace parameter
+    template <class T>
+    inline T &operator()(const T &val) const noexcept
+    {
+        return val;
+    }
+};
 
+struct GetRefWrapper
+{
+    template <class T>
+    inline decltype(auto) operator()(
+        const T &val) const noexcept
+    {
+        return std::ref(val);
+    }
+};
 
 //! reentrant: false
-template <class ValueType,
-          class WindowType,
+template <class _Getter,
+          class _Value,
+          class _Window,
           class... _Accumulators>
-requires Subtraction<ValueType,
-                     WindowType>//
-    struct WindowFilter: LinkedAccumulator<_Accumulators...>
+requires Subtraction<_Value,
+                     _Window>//
+    struct WindowFilterG
+    : LinkedAccumulator<_Accumulators...>
 {
-
 public:
     using Accumulators =
         LinkedAccumulator<_Accumulators...>;
     using base = Accumulators;
-    using Value = ValueType;
-    using Window = WindowType;
+    using Getter = _Getter;
+    using Value = _Value;
+    using Window = _Window;
     using Values = std::pmr::deque<Value>;
 
     // arguments
 public:
     Window window;
+    Getter getter;
 
     // helper variables
 private:
-    std::pmr::unsynchronized_pool_resource memory;
-    Values _datas = Values(&memory);
+    Values _datas;
+    bool _filled = false;
 
     // constructors
 public:
     template <class Args>
-    constexpr WindowFilter(const Args &args)
+    constexpr WindowFilterG(const Args &args)
         : base(args)
-        , window(args[parameter::_window_size])
+        , _datas(args[parameter::_resource
+                      | std::pmr::new_delete_resource()])
     {
+    }
+
+    Accumulators &accumulators()
+    {
+        return *this;
     }
 
     // property getters
@@ -65,6 +85,10 @@ public:
     [[nodiscard]] inline const Value &back() const
     {
         return _datas.back();
+    }
+    [[nodiscard]] inline bool filled() const noexcept
+    {
+        return this->_filled;
     }
     [[nodiscard]] inline size_t size() const
     {
@@ -99,6 +123,7 @@ public:
                 Accumulators::remove(value);
 
                 i = _datas.erase(i);
+                _filled = true;
                 continue;
             }
             else
@@ -117,9 +142,16 @@ public:
     }
     inline void remove(const Value &value)
     {
-        throw std::runtime_error("not implemented");
     }
 };
+
+template <class _Value,
+          class _Window,
+          class... _Accumulators>
+using WindowFilter = WindowFilterG<GetValue,
+                                   _Value,
+                                   _Window,
+                                   _Accumulators...>;
 
 
 }// namespace accumula

@@ -1,2 +1,2 @@
-# nacc
-Nanoric's accumulator library. Extending boost::accumulator.
+# accumula
+Accumulator library.
