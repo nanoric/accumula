@@ -78,19 +78,19 @@ public:
 
     // property getters
 public:
-    [[nodiscard]] inline const Value &begin() const
+    [[nodiscard]] inline auto begin() const
     {
         return _datas.begin();
     }
-    [[nodiscard]] inline const Value &end() const
+    [[nodiscard]] inline auto end() const
     {
         return _datas.end();
     }
-    [[nodiscard]] inline const Value &rbegin() const
+    [[nodiscard]] inline auto rbegin() const
     {
         return _datas.rbegin();
     }
-    [[nodiscard]] inline const Value &rend() const
+    [[nodiscard]] inline auto rend() const
     {
         return _datas.rend();
     }
