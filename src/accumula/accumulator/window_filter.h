@@ -95,6 +95,7 @@ public:
         return _datas.size();
     }
 
+    //! real-time window size.(returns back() - fron())
     [[nodiscard]] constexpr decltype(auto)
     current_window_size() const
     {
@@ -102,7 +103,15 @@ public:
             return Window{};
         return back() - front();
     }
-    inline void puah_back(const Value &value)
+
+public:
+    inline void clear()
+    {
+        this->_datas.clear();
+        this->_filled = false;
+    }
+
+    inline void push_back(const Value &value)
     {
 
         _datas.emplace_back(value);
