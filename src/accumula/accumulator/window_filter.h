@@ -14,58 +14,34 @@ namespace accumula
 {
 namespace mp = boost::mp11;
 
-struct GetValue
-{
-    template <class T>
-    inline T &operator()(const T &val) const noexcept
-    {
-        return val;
-    }
-};
+template <class _Value>
+using WindowFilterDefaultContainer =
+    std::pmr::deque<_Value>;
 
-struct GetRefWrapper
-{
-    template <class T>
-    inline decltype(auto) operator()(
-        const T &val) const noexcept
-    {
-        return std::ref(val);
-    }
-};
-
-struct GetPointer
-{
-    template <class T>
-    inline decltype(auto) operator()(
-        const T &val) const noexcept
-    {
-        return &val;
-    }
-};
 
 //! reentrant: false
-template <class _Getter,
-          class _Value,
+template <class _Value,
           class _Window,
+          class _Container =
+              WindowFilterDefaultContainer<_Value>,
           class... _Accumulators>
 requires Subtraction<_Value,
                      _Window>//
-    struct WindowFilterG
+    struct BasicWindowFilter
     : LinkedAccumulator<_Accumulators...>
 {
 public:
     using Accumulators =
         LinkedAccumulator<_Accumulators...>;
     using base = Accumulators;
-    using Getter = _Getter;
     using Value = _Value;
     using Window = _Window;
-    using Values = std::pmr::list<Value>;
+    using Container = _Container;
+    using Values = Container;
 
     // arguments
 public:
     Window window;
-    Getter getter;
 
     // helper variables
 private:
@@ -78,7 +54,7 @@ private:
     // constructors
 public:
     template <class Args>
-    constexpr WindowFilterG(const Args &args)
+    constexpr BasicWindowFilter(const Args &args)
         : base(args)
         , _datas(args[parameter::_allocator
                       | std::pmr::new_delete_resource()])
@@ -205,10 +181,11 @@ public:
 template <class _Value,
           class _Window,
           class... _Accumulators>
-using WindowFilter = WindowFilterG<GetValue,
-                                   _Value,
-                                   _Window,
-                                   _Accumulators...>;
+using WindowFilter =
+    BasicWindowFilter<_Value,
+                      _Window,
+                      WindowFilterDefaultContainer<_Value>,
+                      _Accumulators...>;
 
 
 }// namespace accumula

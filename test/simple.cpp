@@ -46,7 +46,7 @@ struct Value: TimePoint
 void construct_only()
 {
     std::pmr::unsynchronized_pool_resource res;
-    auto param = parameter::_resource = &res;
+    auto param = parameter::_allocator = &res;
     {
 
         accumula::WindowFilter<Value,
@@ -73,7 +73,7 @@ int main(int argc, char **argv)
     construct_only();
 
     std::pmr::unsynchronized_pool_resource res;
-    auto param = parameter::_resource = &res;
+    auto param = parameter::_allocator = &res;
     accumula::WindowFilter<Value, TimePoint, Sum<Value>> a{
         param};
 
