@@ -1,72 +1,86 @@
+#include <accumula/accumulator/minmax.h>
 #include <accumula/accumulator/sum.h>
 #include <accumula/accumulator/window_filter.h>
 #include <fmt/format.h>
+#include <memory_resource>
 
 using namespace std;
 using namespace accumula;
 
-struct Key
+struct TimePoint
 {
     double key;
-    Key operator-(const Key &rhs) const noexcept
+    TimePoint operator-(const TimePoint &rhs) const noexcept
     {
-        return Key{this->key - rhs.key};
+        return TimePoint{this->key - rhs.key};
     }
-    Key &operator+=(const Key &rhs)
+    TimePoint &operator+=(const TimePoint &rhs)
     {
         this->key += rhs.key;
         return *this;
     }
-    Key &operator-=(const Key &rhs)
+    TimePoint &operator-=(const TimePoint &rhs)
     {
         this->key -= rhs.key;
         return *this;
     }
-    bool operator<(const Key &rhs) const noexcept
+    bool operator<(const TimePoint &rhs) const noexcept
     {
         return this->key < rhs.key;
     }
 };
 
-struct Value: Key
+struct Value: TimePoint
 {
     int value;
     Value()
     {
     }
     Value(double key, int v)
-        : Key{key}
+        : TimePoint{key}
         , value(v)
     {
     }
 };
 
-int main(int argc, char **argv)
+void construct_only()
 {
-    accumula::WindowFilter<Value, Key, Sum<Value>> a(
-        (accumula::parameter::_window_size = Key{2},
-         accumula::parameter::_init_value = Value{2, 2}));
-
-    accumula::WindowFilter<Value, Key, Sum<Value>> sum2(
-        (accumula::parameter::_window_size = Key{2}));
-
+    std::pmr::unsynchronized_pool_resource res;
+    auto param = parameter::_resource = &res;
     {
 
-        accumula::
-            WindowFilter<Value, Key, Accumulate<Value>>
-                acc((accumula::parameter::_window_size =
-                         Key{2}));
+        accumula::WindowFilter<Value,
+                               TimePoint,
+                               Accumulate<Value>>
+            acc{param};
     }
     {
 
         accumula::WindowFilter<Value,
-                               Key,
+                               TimePoint,
                                Accumulate<Value>>
-            acc((accumula::parameter::_window_size = Key{2},
-                 accumula::parameter::_init_value =
-                     Value{2, 2}));
+            acc{param};
     }
+    {
 
+        accumula::
+            WindowFilter<Value, TimePoint, MinMax<Value>>
+            acc{param};
+    }
+}
+int main(int argc, char **argv)
+{
+    construct_only();
+
+    std::pmr::unsynchronized_pool_resource res;
+    auto param = parameter::_resource = &res;
+    accumula::WindowFilter<Value, TimePoint, Sum<Value>> a{
+        param};
+
+    accumula::WindowFilter<Value, TimePoint, Sum<Value>>
+        sum2{param};
+
+    a.window = TimePoint{1.0};
     a.add(Value{1.0, 1});
     a.add(Value{2.0, 2});
     a.add(Value{3.0, 3});

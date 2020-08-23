@@ -1,6 +1,7 @@
 #pragma once
 #include <accumula/concepts/basic.h>
 #include <accumula/concepts/subtraction.h>
+#include <accumula/macros.h>
 #include <accumula/parameters/parameters.h>
 #include <deque>
 #include <memory_resource>
@@ -32,6 +33,16 @@ struct GetRefWrapper
     }
 };
 
+struct GetPointer
+{
+    template <class T>
+    inline decltype(auto) operator()(
+        const T &val) const noexcept
+    {
+        return &val;
+    }
+};
+
 //! reentrant: false
 template <class _Getter,
           class _Value,
@@ -49,7 +60,7 @@ public:
     using Getter = _Getter;
     using Value = _Value;
     using Window = _Window;
-    using Values = std::pmr::deque<Value>;
+    using Values = std::pmr::list<Value>;
 
     // arguments
 public:
@@ -60,13 +71,16 @@ public:
 private:
     Values _datas;
     bool _filled = false;
+#if ACCUMULA_IS_DEBUG()
+    int _debug = 0;
+#endif
 
     // constructors
 public:
     template <class Args>
     constexpr WindowFilterG(const Args &args)
         : base(args)
-        , _datas(args[parameter::_resource
+        , _datas(args[parameter::_allocator
                       | std::pmr::new_delete_resource()])
     {
     }
@@ -102,6 +116,10 @@ public:
     {
         return _datas.back();
     }
+    [[nodiscard]] inline bool empty() const noexcept
+    {
+        return _datas.empty();
+    }
     [[nodiscard]] inline bool filled() const noexcept
     {
         return this->_filled;
@@ -129,17 +147,19 @@ public:
 
     inline void push_back(const Value &value)
     {
-
-        _datas.emplace_back(value);
+        auto &stored_value = _datas.emplace_back(value);
+#if ACCUMULA_IS_DEBUG()
+        if(_debug == 0)
+            int a = 1;
+#endif
 
         // hook add
-        Accumulators::add(value);
+        Accumulators::add(stored_value);
 
-        auto oldest_time = value - window;
+        auto oldest_time = stored_value - window;
 
         // delete all old data
-        for(auto i = _datas.begin(), e = _datas.end();
-            i != e;)
+        for(auto i = _datas.begin(); i != _datas.end();)
         {
             const auto &value = *i;
             if(value < oldest_time)
@@ -156,6 +176,18 @@ public:
                 break;
             }
         }
+#if ACCUMULA_IS_DEBUG()
+        if(_debug == 0)
+            int a = 1;
+#endif
+    }
+
+    // works only under DEBUG mode.
+    void debug(int value)
+    {
+#if ACCUMULA_IS_DEBUG()
+        _debug = value;
+#endif
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -163,7 +195,7 @@ public:
 public:
     inline void add(const Value &value)
     {
-        return puah_back(value);
+        return push_back(value);
     }
     inline void remove(const Value &value)
     {

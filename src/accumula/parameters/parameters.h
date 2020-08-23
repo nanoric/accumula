@@ -3,5 +3,5 @@
 #include <boost/parameter/preprocessor.hpp>
 namespace accumula::parameter
 {
-BOOST_PARAMETER_NAME(resource)
+BOOST_PARAMETER_NAME(allocator)
 }// namespace accumula::parameter
