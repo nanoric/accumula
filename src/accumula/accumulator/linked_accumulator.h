@@ -87,6 +87,10 @@ public:
     {
         return *this;
     }
+    void nexts() const noexcept
+    {
+        return;
+    }
 
 public:
     template <class T>
@@ -122,6 +126,15 @@ public:
     template <class Args>
     LinkedAccumulatorImpl(const Args &args)
     {
+    }
+
+    void current() const noexcept
+    {
+        return;
+    }
+    void nexts() const noexcept
+    {
+        return;
     }
 
 public:

@@ -66,6 +66,25 @@ public:
         return *this;
     }
 
+public:
+    // added these to make WindowFilter behaves like a LinkedAccumulator
+    auto &current()
+    {
+        return Accumulators::current();
+    }
+    const auto &current() const noexcept
+    {
+        return Accumulators::current();
+    }
+    auto &nexts()
+    {
+        return Accumulators::nexts();
+    }
+    const auto &nexts() const noexcept
+    {
+        return Accumulators::nexts();
+    }
+
     // property getters
 public:
     [[nodiscard]] inline auto begin() const
