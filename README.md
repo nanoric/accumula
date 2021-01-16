@@ -2,7 +2,7 @@ Deprecated, use [stream_view](https://git.happyzh.com/weizehua/stream_view) inst
 
 
 # accumula
-Because Boost::accmulators is satisfy with my requirements, I developed this.
+Because Boost::accmulators is not satisfy with my requirements, I developed this.
 
 ## Features:
  * Tempalte based, easy to extend.
